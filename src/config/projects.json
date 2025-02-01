@@ -1,0 +1,12 @@
+{
+  "projects": [
+    {
+      "project_id": "project_1",
+      "wallet_address": "0x1234567890abcdef"
+    },
+    {
+      "project_id": "project_2",
+      "wallet_address": "0x0987654321fedcba"
+    }
+  ]
+}
