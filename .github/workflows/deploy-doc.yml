@@ -46,5 +46,8 @@ jobs:
           path: docs/_site
 
       - name: Deploy to GitHub Pages
-        id: deployment
         uses: actions/deploy-pages@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifact-name: github-pages
+          target-branch: gh-pages
