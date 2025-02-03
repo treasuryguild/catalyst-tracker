@@ -5,7 +5,7 @@ nav_order: 2
 parent: Planning
 ---
 
-# Folder structure of Catalyst Tracker App
+# Folder structure of Catalyst Tracker App (...work in progress)
 
 ```md
 nextjs-catalyst-tool/
