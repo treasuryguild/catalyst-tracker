@@ -41,15 +41,14 @@ jobs:
           JEKYLL_ENV: production
 
       - name: Upload documentation artifact
-        uses: actions/upload-artifact@v4   
+        uses: actions/upload-artifact@v4
         with:
           name: github-pages
-          path: docs/_site    
+          path: docs/_site
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          artifact-name: github-pages
-          target-branch: gh-pages
+          artifact_name: github-pages 
