@@ -1,6 +1,7 @@
 // src/pages/index.tsx
 import { useEffect, useState } from 'react';
 import projects from '../config/projects.json';
+import SheetFetcher from '../components/SheetFetcher';
 
 interface Project {
   project_id: string;
@@ -138,6 +139,7 @@ export default function Home() {
 
   return (
     <div className="home-container">
+      <SheetFetcher/>
       <h1>Project Dashboard</h1>
       <hr />
 
