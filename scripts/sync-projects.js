@@ -133,11 +133,20 @@ async function fetchSnapshotData(projectId) {
 
 /**
  * Updates Google Sheets with provided data.
+ * Now expects a payload of the form:
+ * {
+ *   sheet: 'Wallet Transactions', // or 'Milestones', 'Proposals', 'Config'
+ *   data: [ ... ] // Array of rows to write
+ * }
  */
-async function updateGoogleSheets(formattedData) {
+async function updateGoogleSheets(formattedData, targetSheet) {
+  const payload = {
+    sheet: targetSheet,
+    data: formattedData
+  };
   const response = await axios.post(
     process.env.NEXT_PUBLIC_GOOGLE_SCRIPT_URL,
-    formattedData,
+    payload,
     {
       headers: {
         'Content-Type': 'application/json',
@@ -146,6 +155,7 @@ async function updateGoogleSheets(formattedData) {
   );
   return response.data;
 }
+
 
 /**
  * Retrieves proposal details.
@@ -261,16 +271,12 @@ async function processProject(projectId) {
         const formattedTxs = walletTxs.map(tx => [
           projectId,
           wallet,
-          tx.tx_hash,         // Adjust this field name based on Koios response
-          tx.amount / 1e6,    // Convert lovelaces to ADA if needed
-          tx.time             // Transaction timestamp
+          tx.tx_hash,       // Adjust based on Koios response
+          tx.amount / 1e6,  // Convert lovelaces to ADA if needed
+          tx.time
         ]);
-        // Update the "Wallet Transactions" sheet via the Google Apps Script endpoint.
-        await updateGoogleSheets({
-          sheet: 'Wallet Transactions',
-          data: formattedTxs
-        });
-      }
+        await updateGoogleSheets(formattedTxs, 'Wallet Transactions');
+      }      
     } else {
       console.log(`No wallet configured for project ${projectId}`);
     }
@@ -300,7 +306,7 @@ async function main() {
 
   if (allFormattedData.length > 0) {
     try {
-      const result = await updateGoogleSheets(allFormattedData);
+      const result = await updateGoogleSheets(allFormattedData, 'Milestones');
       console.log('Sheets update result:', result);
     } catch (error) {
       console.error('Failed to update Google Sheets:', error);
