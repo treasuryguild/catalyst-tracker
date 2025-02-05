@@ -12,6 +12,36 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL2;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY2;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+/**
+ * Helper to get a project configuration value from the single environment variable.
+ * The env variable NEXT_PUBLIC_PROJECT_CONFIGS should be a JSON string representing an array of arrays.
+ *
+ * Example:
+ * [
+ *   ["project_1000107_wallet", "stake1u8ABC123...", "ADA wallet address for project 1000107"],
+ *   ["project_1000107_from", "2024-01-01", "Start date for milestone funds..."],
+ *   ["project_1000107_to", "2024-02-01", "End date for milestone funds..."]
+ * ]
+ *
+ * @param {string|number} projectId - The project ID.
+ * @param {string} keySuffix - One of "wallet", "from", or "to".
+ * @returns {string|null} The value or null if not found.
+ */
+function getProjectEnvValue(projectId, keySuffix) {
+  let configs = [];
+  try {
+    configs = JSON.parse(process.env.NEXT_PUBLIC_PROJECT_CONFIGS || "[]");
+  } catch (e) {
+    console.error("Error parsing NEXT_PUBLIC_PROJECT_CONFIGS:", e);
+  }
+  const key = `project_${projectId}_${keySuffix}`;
+  const config = configs.find(item => item[0] === key);
+  return config ? config[1] : null;
+}
+
+/**
+ * Retrieves the proposal ID from Supabase.
+ */
 async function getProposalId(projectId) {
   console.log(`Getting proposal ID for project ${projectId}`);
   
@@ -30,6 +60,9 @@ async function getProposalId(projectId) {
   return data?.id;
 }
 
+/**
+ * Fetches milestone data using Supabase.
+ */
 async function fetchMilestoneData(projectId, milestone) {
   const proposalId = await getProposalId(projectId);
   console.log(`Fetching milestone data for proposal ${proposalId}, milestone ${milestone}`);
@@ -66,7 +99,6 @@ async function fetchMilestoneData(projectId, milestone) {
     throw error;
   }
 
-  // Ensure we only get the most recent POA
   if (data?.length && data[0].poas?.length > 1) {
     const sortedPoas = [...data[0].poas].sort((a, b) => {
       const dateA = a.signoffs?.[0]?.created_at || '0';
@@ -80,6 +112,9 @@ async function fetchMilestoneData(projectId, milestone) {
   return data;
 }
 
+/**
+ * Fetches snapshot data using Supabase RPC.
+ */
 async function fetchSnapshotData(projectId) {
   const response = await axios({
     method: 'POST',
@@ -96,6 +131,9 @@ async function fetchSnapshotData(projectId) {
   return response.data;
 }
 
+/**
+ * Updates Google Sheets with provided data.
+ */
 async function updateGoogleSheets(formattedData) {
   const response = await axios.post(
     process.env.NEXT_PUBLIC_GOOGLE_SCRIPT_URL,
@@ -109,6 +147,9 @@ async function updateGoogleSheets(formattedData) {
   return response.data;
 }
 
+/**
+ * Retrieves proposal details.
+ */
 async function getProposalDetails(projectId) {
   console.log(`Getting proposal details for project ${projectId}`);
   
@@ -134,6 +175,14 @@ async function getProposalDetails(projectId) {
   return data;
 }
 
+// ----------------------
+// Koios Service Wrapper
+// ----------------------
+const { fetchWalletTransactions } = require('./koiosWrapper');
+
+/**
+ * Processes a single project.
+ */
 async function processProject(projectId) {
   console.log(`Processing project ${projectId}...`);
   
@@ -145,13 +194,13 @@ async function processProject(projectId) {
     console.log('- Project ID:', projectId);
     console.log('- Generated Link:', milestonesLink);
     
-    // First try to get snapshot data
+    // Fetch snapshot data for milestones
     const snapshotData = await fetchSnapshotData(projectId);
     console.log(`Found ${snapshotData.length} milestones for project ${projectId}`);
     
-    // If we have snapshot data, process it normally
+    // Process milestone data
+    let formattedData = [];
     if (snapshotData.length > 0) {
-      const formattedData = [];
       for (const snapshot of snapshotData) {
         const milestoneData = await fetchMilestoneData(projectId, snapshot.milestone);
         console.log(`Processing milestone ${snapshot.milestone} data:`, JSON.stringify(milestoneData, null, 2));
@@ -175,19 +224,15 @@ async function processProject(projectId) {
           milestones_link: milestonesLink
         });
       }
-      return formattedData;
-    } 
-    // For new proposals without milestone data yet
-    else {
-      const formattedData = [];
-      // Create an entry for each planned milestone
+    } else {
+      // For new proposals without milestone data yet
       for (let i = 1; i <= proposalDetails.milestones_qty; i++) {
         formattedData.push({
           title: proposalDetails.title,
           project_id: projectId,
           milestone: i,
-          month: i,  // Assuming one month per milestone
-          cost: Math.round(proposalDetails.budget / proposalDetails.milestones_qty), // Divide budget equally
+          month: i,
+          cost: Math.round(proposalDetails.budget / proposalDetails.milestones_qty),
           completion: 0,
           budget: proposalDetails.budget,
           funds_distributed: proposalDetails.funds_distributed,
@@ -201,14 +246,45 @@ async function processProject(projectId) {
           milestones_link: milestonesLink
         });
       }
-      return formattedData;
     }
+    
+    // Process wallet transactions using the single env variable.
+    const wallet = getProjectEnvValue(projectId, 'wallet');
+    const fromDate = getProjectEnvValue(projectId, 'from');
+    const toDate = getProjectEnvValue(projectId, 'to');
+    
+    if (wallet) {
+      console.log(`Fetching transactions for wallet ${wallet} between ${fromDate || 'beginning'} and ${toDate || 'now'}`);
+      const walletTxs = await fetchWalletTransactions(wallet, fromDate, toDate);
+      console.log(`Found ${walletTxs.length} transactions for wallet ${wallet}`);
+      if (walletTxs.length > 0) {
+        const formattedTxs = walletTxs.map(tx => [
+          projectId,
+          wallet,
+          tx.tx_hash,         // Adjust this field name based on Koios response
+          tx.amount / 1e6,    // Convert lovelaces to ADA if needed
+          tx.time             // Transaction timestamp
+        ]);
+        // Update the "Wallet Transactions" sheet via the Google Apps Script endpoint.
+        await updateGoogleSheets({
+          sheet: 'Wallet Transactions',
+          data: formattedTxs
+        });
+      }
+    } else {
+      console.log(`No wallet configured for project ${projectId}`);
+    }
+    
+    return formattedData;
   } catch (error) {
     console.error(`Error processing project ${projectId}:`, error);
     throw error;
   }
 }
 
+/**
+ * Main function to process all projects.
+ */
 async function main() {
   const projectIds = (process.env.PROJECT_IDS || '1000107').split(',');
   let allFormattedData = [];
@@ -219,7 +295,6 @@ async function main() {
       allFormattedData = [...allFormattedData, ...projectData];
     } catch (error) {
       console.error(`Failed to process project ${projectId}:`, error);
-      // Continue with other projects even if one fails
     }
   }
 

@@ -1,8 +1,9 @@
-const GOOGLE_SHEETS_API_URL = process.env.NEXT_PUBLIC_GOOGLE_SCRIPT_URL; 
+// utils/googleSheets.js
+const GOOGLE_SHEETS_API_URL = process.env.NEXT_PUBLIC_GOOGLE_SCRIPT_URL;
 
 export async function fetchSheetData(sheetName) {
   try {
-    const response = await fetch(`${GOOGLE_SHEETS_API_URL}?sheet=${sheetName}`);
+    const response = await fetch(`${GOOGLE_SHEETS_API_URL}?sheet=${encodeURIComponent(sheetName)}`);
     const data = await response.json();
 
     if (data.status !== 'success') {
