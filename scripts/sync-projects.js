@@ -4,6 +4,7 @@ const axios = require('axios');
 
 // Initialize constants
 const MILESTONES_BASE_URL = process.env.NEXT_PUBLIC_MILESTONES_URL || 'https://milestones.projectcatalyst.io';
+const projectConfigsEnv = process.env.NEXT_PUBLIC_PROJECT_CONFIGS || "[]";
 console.log('Environment check:');
 console.log('- MILESTONES_BASE_URL:', MILESTONES_BASE_URL);
 console.log('- URL type:', typeof MILESTONES_BASE_URL);
@@ -304,12 +305,32 @@ async function main() {
     }
   }
 
+  // Update the Milestones sheet if any data exists
   if (allFormattedData.length > 0) {
     try {
       const result = await updateGoogleSheets(allFormattedData, 'Milestones');
       console.log('Sheets update result:', result);
     } catch (error) {
       console.error('Failed to update Google Sheets:', error);
+      process.exit(1);
+    }
+  }
+
+  // Parse the project configuration from the environment variable
+  let projectConfigs = [];
+  try {
+    projectConfigs = JSON.parse(projectConfigsEnv);
+  } catch (e) {
+    console.error('Error parsing NEXT_PUBLIC_PROJECT_CONFIGS:', e);
+  }
+  
+  // If any configuration data exists, update the Config sheet
+  if (projectConfigs.length > 0) {
+    try {
+      const configResult = await updateGoogleSheets(projectConfigs, 'Config');
+      console.log('Config sheet update result:', configResult);
+    } catch (error) {
+      console.error('Failed to update Config sheet:', error);
       process.exit(1);
     }
   }
