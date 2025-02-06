@@ -269,14 +269,14 @@ async function processProject(projectId) {
       const walletTxs = await fetchWalletTransactions(wallet, fromDate, toDate);
       console.log(`Found ${walletTxs.length} transactions for wallet ${wallet}`);
       if (walletTxs.length > 0) {
-        const formattedTxs = walletTxs.map(tx => [
-          projectId,
-          wallet,
-          tx.tx_hash,       // Adjust based on Koios response
-          tx.amount / 1e6,  // Convert lovelaces to ADA if needed
-          tx.time
-        ]);
-        await updateGoogleSheets(formattedTxs, 'Wallet Transactions');
+        const formattedTxs = walletTxs.map(tx => ({
+          project_id: projectId,
+          wallet: wallet,
+          tx_hash: tx.tx_hash,
+          tx_timestamp: tx.timestamp,  
+          outputs: tx.outputs 
+        }));
+        await updateGoogleSheets(formattedTxs, 'Wallet Transactions');        
       }      
     } else {
       console.log(`No wallet configured for project ${projectId}`);
