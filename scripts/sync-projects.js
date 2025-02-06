@@ -273,7 +273,7 @@ async function processProject(projectId) {
           project_id: projectId,
           wallet: wallet,
           tx_hash: tx.tx_hash,
-          tx_timestamp: tx.timestamp,  
+          tx_timestamp: tx.tx_timestamp,  
           outputs: tx.outputs 
         }));
         await updateGoogleSheets(formattedTxs, 'Wallet Transactions');        
