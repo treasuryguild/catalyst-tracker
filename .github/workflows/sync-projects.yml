@@ -15,6 +15,7 @@ jobs:
       NEXT_PUBLIC_MILESTONES_URL: 'https://milestones.projectcatalyst.io'
       NEXT_PUBLIC_PROJECT_CONFIGS: ${{ secrets.NEXT_PUBLIC_PROJECT_CONFIGS }}
       KOIOS_API_KEY: ${{ secrets.KOIOS_API_KEY }}
+      PROJECT_IDS: ${{ secrets.DEFAULT_PROJECT_IDS }}
     steps:
       - uses: actions/checkout@v2
       
@@ -28,5 +29,3 @@ jobs:
         
       - name: Run sync script
         run: node scripts/sync-projects.js
-        env:
-          PROJECT_IDS: ${{ secrets.DEFAULT_PROJECT_IDS }}
