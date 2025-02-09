@@ -3,12 +3,7 @@ name: Sync Project Data to Sheets
 on:
   schedule:
     - cron: '0 0 * * *'  # Runs at Midnight UTC every day
-  workflow_dispatch:
-    inputs:
-      project_ids:
-        description: 'Comma-separated list of project IDs to sync'
-        required: false
-        default: ''  
+  workflow_dispatch: 
 
 jobs:
   sync-projects:
@@ -34,4 +29,4 @@ jobs:
       - name: Run sync script
         run: node scripts/sync-projects.js
         env:
-          PROJECT_IDS: ${{ github.event.inputs.project_ids || secrets.DEFAULT_PROJECT_IDS }}
+          PROJECT_IDS: ${{ secrets.DEFAULT_PROJECT_IDS }}
