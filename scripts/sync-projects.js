@@ -379,6 +379,15 @@ async function main() {
     console.error('Failed to update Collaborator Allocations sheet:', error);
     process.exit(1);
   }
+
+  // --- NEW: Update the Dashboard ---
+  try {
+    const dashboardResult = await updateGoogleSheets([], 'Dashboard');
+    console.log('Dashboard sheet update result:', dashboardResult);
+  } catch (error) {
+    console.error('Failed to update Dashboard sheet:', error);
+    process.exit(1);
+  }
 }
 
 main().catch(error => {
