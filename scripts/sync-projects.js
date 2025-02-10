@@ -282,7 +282,23 @@ async function processProject(projectId) {
       console.log(`No wallet configured for project ${projectId}`);
     }
     
-    return formattedData;
+    // Prepare the proposal row for the Proposals sheet.
+    const remainingFunds = proposalDetails.budget - proposalDetails.funds_distributed;
+    const proposalRow = {
+      project_id: projectId,
+      title: proposalDetails.title,
+      budget: proposalDetails.budget,
+      funds_distributed: proposalDetails.funds_distributed,
+      remaining_funds: remainingFunds,
+      milestones_qty: proposalDetails.milestones_qty,
+      milestones_link: milestonesLink
+    };
+    
+    // Return both milestone data and the proposal row.
+    return {
+      milestoneData: formattedData,
+      proposal: proposalRow
+    };
   } catch (error) {
     console.error(`Error processing project ${projectId}:`, error);
     throw error;
@@ -295,28 +311,49 @@ async function processProject(projectId) {
 async function main() {
   const projectIds = (process.env.PROJECT_IDS || '1000107').split(',');
   let allFormattedData = [];
+  let proposalsData = [];
 
   for (const projectId of projectIds) {
     try {
-      const projectData = await processProject(projectId.trim());
-      allFormattedData = [...allFormattedData, ...projectData];
+      const { milestoneData, proposal } = await processProject(projectId.trim());
+      allFormattedData = [...allFormattedData, ...milestoneData];
+      proposalsData.push([
+        proposal.project_id,
+        proposal.title,
+        proposal.budget,
+        proposal.funds_distributed,
+        proposal.remaining_funds,
+        proposal.milestones_qty,
+        proposal.milestones_link
+      ]);
     } catch (error) {
       console.error(`Failed to process project ${projectId}:`, error);
     }
   }
 
-  // Update the Milestones sheet if any data exists
+  // Update the Milestones sheet if any data exists.
   if (allFormattedData.length > 0) {
     try {
       const result = await updateGoogleSheets(allFormattedData, 'Milestones');
-      console.log('Sheets update result:', result);
+      console.log('Milestones sheet update result:', result);
     } catch (error) {
-      console.error('Failed to update Google Sheets:', error);
+      console.error('Failed to update Milestones sheet:', error);
       process.exit(1);
     }
   }
 
-  // Parse the project configuration from the environment variable
+  // Update the Proposals sheet if proposals data exists.
+  if (proposalsData.length > 0) {
+    try {
+      const proposalsResult = await updateGoogleSheets(proposalsData, 'Proposals');
+      console.log('Proposals sheet update result:', proposalsResult);
+    } catch (error) {
+      console.error('Failed to update Proposals sheet:', error);
+      process.exit(1);
+    }
+  }
+
+  // Parse the project configuration from the environment variable.
   let projectConfigs = [];
   try {
     projectConfigs = JSON.parse(projectConfigsEnv);
@@ -324,7 +361,7 @@ async function main() {
     console.error('Error parsing NEXT_PUBLIC_PROJECT_CONFIGS:', e);
   }
   
-  // If any configuration data exists, update the Config sheet
+  // Update the Config sheet if configuration data exists.
   if (projectConfigs.length > 0) {
     try {
       const configResult = await updateGoogleSheets(projectConfigs, 'Config');
