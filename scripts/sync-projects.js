@@ -353,7 +353,7 @@ async function main() {
     }
   }
 
-  // Parse the project configuration from the environment variable.
+  // Update the Config sheet.
   let projectConfigs = [];
   try {
     projectConfigs = JSON.parse(projectConfigsEnv);
@@ -361,7 +361,6 @@ async function main() {
     console.error('Error parsing NEXT_PUBLIC_PROJECT_CONFIGS:', e);
   }
   
-  // Update the Config sheet if configuration data exists.
   if (projectConfigs.length > 0) {
     try {
       const configResult = await updateGoogleSheets(projectConfigs, 'Config');
@@ -370,6 +369,15 @@ async function main() {
       console.error('Failed to update Config sheet:', error);
       process.exit(1);
     }
+  }
+  
+  // NEW: Run Collaborator Allocations update after all others.
+  try {
+    const collabResult = await updateGoogleSheets([], 'Collaborator Allocations');
+    console.log('Collaborator Allocations sheet update result:', collabResult);
+  } catch (error) {
+    console.error('Failed to update Collaborator Allocations sheet:', error);
+    process.exit(1);
   }
 }
 
