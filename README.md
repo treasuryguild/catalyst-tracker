@@ -1,170 +1,92 @@
-# Catalyst Tracker Tool
+# 🚀 Project Automation with Google Sheets & GitHub Actions
 
-A Next.js application for tracking Project Catalyst proposals and wallet data with dynamic dashboards, automated integrations, and more.
+This repository automates the tracking of projects, transactions, and milestones using **Google Sheets**, **GitHub Actions**, and **Google Apps Script**. The Next.js app is included for potential future developments, but the focus is on the scripts.
 
-## Table of Contents
+---
 
-- [Features](#features)
-- [Folder Structure](#folder-structure)
-- [Getting Started](#getting-started)
-- [Environment Variables](#environment-variables)
-- [Usage](#usage)
-- [Testing](#testing)
-- [Contributing](#contributing)
-- [License](#license)
+## 📄 Use the Google Sheets Template
 
-## Features
+Click the button below to **create a copy** of the Google Sheets template:
 
-- **Dynamic Dashboard:** Visualize Project Catalyst proposals and wallet data.
-- **API Endpoints:** Next.js API routes to fetch and process data.
-- **Automation:** GitHub Actions for CI/CD, automated testing, and data synchronization.
-- **External Integrations:** Connect with Project Catalyst API and Google Sheets API.
-- **Responsive Design:** Built with Next.js and modern UI components.
+[![Make a Copy of the Google Sheet](https://img.shields.io/badge/Copy%20Google%20Sheet-blue?logo=google-drive)](https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/copy)
 
-## Folder Structure
+Once copied, update your **Google Apps Script** as needed.
 
-```plaintext
-nextjs-catalyst-tool/
-├── .github/
-│   └── workflows/
-│       ├── ci-cd.yml
-│       └── automation.yml
-├── public/
-│   ├── images/
-│   └── assets/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   │   ├── api/
-│   │   ├── index.js
-│   │   ├── proposals.js
-│   │   └── wallets.js
-│   ├── lib/
-│   ├── hooks/
-│   └── styles/
-├── scripts/
-├── tests/
-├── .env.local
-├── next.config.js
-├── package.json
-└── README.md
+---
+
+## 🚀 Use This Repo as a Template
+
+Click the button below to **create your own GitHub repository** from this template:
+
+[![Use This Template](https://img.shields.io/badge/Create%20a%20Repo-blue?logo=github)](https://github.com/treasuryguild/catalyst-tracker/generate)
+
+After creating your repository, follow the steps below to configure GitHub Actions.
+
+---
+
+## 🔑 Setup GitHub Secrets
+
+To allow the GitHub Action to sync data to Google Sheets, add the following **secrets** in your GitHub repository:
+
+1. Go to **Settings** > **Secrets and variables** > **Actions**
+2. Click **New repository secret** for each of the following:
+
+| Secret Name | Description |
+|------------|-------------|
+| `NEXT_PUBLIC_SUPABASE_URL2` | Supabase API URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY2` | Supabase Anonymous Key |
+| `NEXT_PUBLIC_GOOGLE_SCRIPT_URL` | Web App URL of the Google Apps Script |
+| `NEXT_PUBLIC_MILESTONES_URL` | Milestone tracking API (default: `https://milestones.projectcatalyst.io`) |
+| `NEXT_PUBLIC_PROJECT_CONFIGS` | JSON string containing project configurations (example below) |
+| `KOIOS_API_KEY` | API key for Koios |
+| `PROJECT_IDS` | Comma-separated list of project IDs to sync |
+
+---
+
+## 📜 Example `NEXT_PUBLIC_PROJECT_CONFIGS`
+
+The `NEXT_PUBLIC_PROJECT_CONFIGS` secret should be a **JSON string** containing configurations for each project:
+
+```json
+[
+  ["project_1100271_wallet", "stake1u8ABC123...", "ADA wallet address for project 1100271"],
+  ["project_1100271_from", "2023-01-01", "Start date for milestone funds (ISO date)"],
+  ["project_1100271_to", "2025-01-01", "End date for milestone funds (ISO date)"]
+]
 ```
 
-## Getting Started
+---
 
-### Prerequisites
+## 🛠 How the GitHub Action Works
 
-- Node.js (>=14.x)
-- npm or yarn
-- A GitHub account (for CI/CD integration)
+1. **Syncs project data** to Google Sheets via GitHub Actions.
+2. **Runs daily at midnight UTC** or can be triggered manually.
+3. **Pulls transactions** from Koios API and updates Google Sheets.
+4. **Ensures Milestones and Proposals stay updated** in the sheet.
 
-### Installation
+### **Triggering the GitHub Action Manually**
+To trigger the action manually:
+1. Go to your **repository** on GitHub.
+2. Navigate to **Actions**.
+3. Select the `Sync Project Data to Sheets` workflow.
+4. Click **Run workflow**.
 
-1. **Clone the repository:**
+---
 
-~~~bash
-git clone https://github.com/yourusername/nextjs-catalyst-tool.git
-cd nextjs-catalyst-tool
-~~~
+## ❓ Do I Need to Deploy the Next.js App?
 
-2. **Install dependencies:**
+🚨 **No, you don’t need to deploy the Next.js app**. The app is included for potential future development, but **this repository mainly relies on GitHub Actions, the scripts in the 'scripts' folder and Google Sheets**.
 
-Using npm:
-~~~bash
-npm install
-~~~
+---
 
-Or using yarn:
-~~~bash
-yarn install
-~~~
+## 🎯 Next Steps
 
-3. **Setup Environment Variables:**
+- [ ] **Make a Copy of the Google Sheet**  
+- [ ] **Create a New Repo from This Template**  
+- [ ] **Add GitHub Secrets**  
+- [ ] **Manually Trigger the GitHub Action (if needed)**  
+- [ ] **Customize Google Apps Script (if necessary)**  
 
-Create a `.env.local` file in the root directory and add your environment variables. See the [Environment Variables](#environment-variables) section for details.
+---
 
-## Environment Variables
-
-Configure your environment variables in `.env.local`:
-
-~~~env
-NEXT_PUBLIC_API_BASE_URL=https://api.example.com
-GOOGLE_SHEETS_API_KEY=your_google_sheets_api_key
-PROJECT_CATALYST_API_KEY=your_project_catalyst_api_key
-~~~
-
-Adjust the values as needed.
-
-## Usage
-
-### Running the Development Server
-
-Start the development server with:
-
-~~~bash
-npm run dev
-~~~
-
-or
-
-~~~bash
-yarn dev
-~~~
-
-Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
-
-### Building for Production
-
-Build the application for production:
-
-~~~bash
-npm run build
-~~~
-
-or
-
-~~~bash
-yarn build
-~~~
-
-### Running the Production Server
-
-After building, start the production server:
-
-~~~bash
-npm start
-~~~
-
-or
-
-~~~bash
-yarn start
-~~~
-
-## Testing
-
-Automated tests are located in the `tests/` directory. Run tests using:
-
-~~~bash
-npm test
-~~~
-
-or
-
-~~~bash
-yarn test
-~~~
-
-## Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository.
-2. Create a new branch (`git checkout -b feature/your-feature`).
-3. Commit your changes (`git commit -m 'Add some feature'`).
-4. Push to the branch (`git push origin feature/your-feature`).
-5. Open a pull request.
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+🚀 Happy Automating! 🎉
