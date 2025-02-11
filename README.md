@@ -8,7 +8,7 @@ This repository automates the tracking of projects, transactions, and milestones
 
 Click the button below to **create a copy** of the Google Sheets template:
 
-[![Make a Copy of the Google Sheet](https://img.shields.io/badge/Copy%20Google%20Sheet-blue?logo=google-drive)](https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/copy)
+[![Make a Copy of the Google Sheet](https://img.shields.io/badge/Copy%20Google%20Sheet-blue?logo=google-drive)](https://docs.google.com/spreadsheets/d/1Jnt_61uwZmqYTN_I7HbhqPqCLmYU_U04WJi37Rg5zu4/copy)
 
 Once copied, update your **Google Apps Script** as needed.
 
